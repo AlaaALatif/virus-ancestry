@@ -20,4 +20,5 @@ Please Enter 2nd Organism Name: H1N1 swine influenza virus
 Lowest Common Ancestor: Riboviria
 # type 'quit' to exit program. Type anything else to continue
 quit
+Program Exit: Goodbye!
 ```
