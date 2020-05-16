@@ -1,5 +1,5 @@
 # virus-ancestry
-A solution to the coding assignment for Andersen's lab. 
+A solution to the coding assignment for Andersen's lab.
 
 ## INSTALL
 ```bash
@@ -18,5 +18,6 @@ python main.py taxdump.tar.gz
 Please Enter 1st Organism Name: Middle East respiratory syndrome-related coronavirus
 Please Enter 2nd Organism Name: H1N1 swine influenza virus
 Lowest Common Ancestor: Riboviria
+# type 'quit' to exit program. Type anything else to continue
 quit
 ```
