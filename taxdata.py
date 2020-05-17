@@ -1,7 +1,7 @@
 import tarfile
 from collections import defaultdict
 from path import Path
-from utils import Node
+from utils import TreeNode
 
 
 class TaxData:
@@ -13,59 +13,53 @@ class TaxData:
         self.data_files = tarfile.open(data_path, 'r')
 
     def load_data(self):
-        """Loads Taxonomy dump into suitable data structures
-        self.id2name: dictionary that maps tax ids to organism names
-        self.name2node: dictionary that maps organism names to corresponding
-        nodes"""
+        """Loads Taxonomy dump into Tree data structure"""
         # map tax ids to names
         self.id2name = defaultdict(str)
+        # map names to nodes
+        self.name2node = {}
+        # map child to parent
+        child2parent = {}
         for line in self.data_files.extractfile("names.dmp"):
             row = line.decode().split('\t|\t')
             self.id2name[row[0]] = row[1]
-        # map names to nodes
-        self.name2node = {}
+        
         for line in self.data_files.extractfile("nodes.dmp"):
             # parse tab-separated line
             row = line.decode().split('\t|\t')[:-1]
             # grab name and parent name
             name = self.id2name[row[0]]
             parent_name = self.id2name[row[1]]
+            child2parent[name] = parent_name
             # create and store a node
-            node = Node(name, parent_name)
+            node = TreeNode(name)
             self.name2node[name] = node
-        return 'Data Sucessfully Loaded into RTree'
+        # build classical tree data structure
+        for name, node in self.name2node.items():
+            if name == "root":
+                # initialize root of tree
+                self.tree = node
+            else:
+                # retrieve parent name
+                parent_name = child2parent[name]
+                # retrieve parent node
+                parent_node = self.name2node[parent_name]
+                # link child to parent node
+                node.parent = parent_node
+                # link parent to child node
+                parent_node.add_child(node)
 
     def get_common_ancestor(self, name1, name2):
         """Returns the lowest common ancestor between two organisms
         name1: organism's name or tax id (str or int)
         name2: organism's name or tax id (str or int)"""
         # get lineage of nodes
-        if type(name1) == int:
-            name1 = self.id2name[name1]
-        if type(name2) == int:
-            name2 = self.id2name[name2]
-        lineage1 = self.get_lineage(name1)
-        lineage2 = self.get_lineage(name2)
+        node1, node2 = self.name2node[name1], self.name2node[name2]
+        lineage1 = node1.get_lineage()
+        lineage2 = node2.get_lineage()
         # find 1st common ancestor
         first_common_ancestor = next((p for p in lineage1 if p in set(lineage2)))
         return first_common_ancestor
-
-    def get_lineage(self, name: str):
-        """Returns the full lineage of an organism
-        name: organism's name
-        self.lineage: organism's lineage (list)"""
-        node = self.name2node[name]
-        self.lineage = []
-        self.lineage = self._get_lineage(node)
-        return self.lineage
-
-    def _get_lineage(self, node: Node):
-        """Helper function to recursively traverse data structure and get
-        lineage"""
-        self.lineage.append(node.name)
-        if node.name == 'root':
-            return self.lineage
-        return self._get_lineage(self.name2node[node.parent])
 
     def __repr__(self):
         return f'{self.__class__.__name__}: Data Source: {self.data_path}'
